@@ -53,8 +53,8 @@ section{position:relative}
 /* ══════════════ HERO ══════════════ */
 .hero{min-height:100vh;display:flex;align-items:center;padding:7rem 0 3rem;overflow:hidden}
 .blob{position:absolute;z-index:1;pointer-events:none;fill:#fff}
-.blob-tl{top:-90px;left:-110px;width:380px}
-.blob-br{bottom:-110px;right:-130px;width:420px;transform:rotate(180deg)}
+.blob-tl{top:-90px;left:-110px;width:380px;display:none}
+.blob-br{bottom:-110px;right:-130px;width:420px;transform:rotate(180deg);display:none}
 
 .hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:2rem;align-items:center;max-width:1280px;margin:0 auto;padding:0 3rem;width:100%;position:relative;z-index:2}
 .hero-text{display:flex;flex-direction:column;gap:2.1rem}
