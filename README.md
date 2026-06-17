@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+
 <html lang="sq">
 <head>
 <meta charset="UTF-8"/>
@@ -643,8 +643,8 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     this.geo.attributes.color.needsUpdate=true;
   };
 
-  var flame = new Pool(mobile?700:1000, 0.13, 1.0);
-  var plume = new Pool(mobile?800:1300, 0.26, 0.85);
+  var flame = new Pool(mobile?700:1000, 0.10, 0.95);
+  var plume = new Pool(mobile?800:1300, 0.20, 0.7);
   var FLAME_LO=[0.35,0.06,0.0], FLAME_MID=[1.0,0.55,0.16], FLAME_HI=[1.0,0.97,0.80];
   var PLUME_LO=[0.22,0.24,0.28], PLUME_MID=[0.62,0.66,0.74], PLUME_HI=[0.97,0.98,1.0];
 
@@ -706,8 +706,8 @@ document.getElementById('contactForm').addEventListener('submit', e => {
       rocketPoints.rotation.y += 0.30*dt;
       thrustVis += (0.45 - thrustVis) * Math.min(1, dt*4);
       // gentle pre-launch flame + a wisp of white smoke
-      flame.emit(reduce?2:4, wx, wy, wz, 1.0, 2.0, 0.08, 0.20, 0.40, 0);
-      plume.emit(1, wx, wy-0.04, wz, 0.2, 0.5, 0.13, 1.2, 2.0, 0.5);
+      flame.emit(reduce?2:3, wx, wy, wz, 0.9, 1.7, 0.06, 0.18, 0.34, 0);
+      plume.emit(1, wx, wy-0.04, wz, 0.18, 0.42, 0.10, 1.0, 1.7, 0.45);
       starSpeed += (0.05 - starSpeed) * Math.min(1, dt*2);
       if(stateT >= dur){ state='launch'; stateT=0; vy=2.2; }
 
@@ -719,8 +719,8 @@ document.getElementById('contactForm').addEventListener('submit', e => {
       rocketPoints.rotation.y += 0.6*dt;
       rocket.position.x = 0.04*Math.sin(t*24) * Math.max(0, 1 - rocket.position.y*0.2);
       // strong fire + white smoke trailing from behind
-      flame.emit(reduce?12:26, wx, wy, wz, reduce?3.5:6.0, reduce?5:9, 0.14, 0.28, 0.52, 0);
-      plume.emit(reduce?8:16, wx, wy-0.05, wz, 1.3, 3.0, 0.22, 1.3, 2.6, 0.9);
+      flame.emit(reduce?6:11, wx, wy, wz, reduce?2.4:3.8, reduce?3.4:5.2, 0.07, 0.22, 0.40, 0);
+      plume.emit(reduce?4:8, wx, wy-0.05, wz, 0.8, 1.8, 0.12, 1.1, 2.1, 0.6);
       starSpeed += ((reduce?2.0:5.5) - starSpeed) * Math.min(1, dt*2.5);
       if(rocket.position.y > -0.2){
         rocketAlpha += (0 - rocketAlpha) * Math.min(1, dt*1.7);   // fade as it leaves
@@ -738,7 +738,7 @@ document.getElementById('contactForm').addEventListener('submit', e => {
 
     // engine flare + window glow + body bloom
     var flick = 0.88 + Math.random()*0.22;
-    var es = (0.45 + 1.7*thrustVis) * flick;
+    var es = (0.35 + 1.0*thrustVis) * flick;
     engineFlare.scale.set(es, es*1.15, 1);
     engineFlare.material.opacity = (0.2 + 0.8*thrustVis) * rocketAlpha;
     winGlow.material.opacity = (0.5 + 0.4*Math.sin(t*3.0)) * rocketAlpha * 0.9;
