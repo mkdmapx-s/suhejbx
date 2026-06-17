@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="sq">
 <head>
 <meta charset="UTF-8"/>
@@ -56,7 +56,7 @@ section{position:relative}
 .blob-tl{top:-90px;left:-110px;width:380px;display:none}
 .blob-br{bottom:-110px;right:-130px;width:420px;transform:rotate(180deg);display:none}
 
-.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:2rem;align-items:center;max-width:1280px;margin:0 auto;padding:0 3rem;width:100%;position:relative;z-index:2}
+.hero-grid{display:grid;grid-template-columns:1.05fr 1fr;gap:2rem;align-items:start;max-width:1280px;margin:0 auto;padding:0 3rem;width:100%;position:relative;z-index:2}
 .hero-text{display:flex;flex-direction:column;gap:2.1rem}
 .logo-row{display:flex;align-items:flex-start;gap:.9rem;max-width:100%;min-width:0}
 .logo{font-weight:800;font-size:clamp(2.1rem,8vw,4.6rem);letter-spacing:.02em;line-height:1;color:#fff;opacity:0;transform:translateY(24px);animation:fadeUp .8s .1s cubic-bezier(.16,1,.3,1) forwards;min-width:0}
@@ -168,12 +168,12 @@ footer .nav-links a{color:var(--gray)}
 
 /* ══════════════ RESPONSIVE ══════════════ */
 @media (max-width:980px){
-  .hero-grid{grid-template-columns:1fr;text-align:center}
-  .hero{padding-top:7rem;min-height:auto}
-  .logo-row,.services-list,.hero-cta{align-items:center;justify-content:center}
-  .logo-row{justify-content:center}
-  .tagline{margin:0 auto}
-  .lizard-3d{max-width:440px;margin-top:2.5rem}
+  .hero-grid{grid-template-columns:1.2fr .8fr;text-align:left;gap:1rem;align-items:start}
+  .hero{padding-top:6.5rem;min-height:auto}
+  .logo-row,.services-list,.hero-cta{align-items:flex-start;justify-content:flex-start}
+  .logo-row{justify-content:flex-start}
+  .tagline{margin:0}
+  .lizard-3d{max-width:440px;margin-top:0}
   .about-grid,.contact-grid{grid-template-columns:1fr;gap:2.5rem}
 }
 @media (max-width:860px){
@@ -190,7 +190,8 @@ footer .nav-links a{color:var(--gray)}
   .hero-grid{padding:0 1.1rem;gap:1.4rem}
   .hero-text{gap:1.5rem}
   .logo-row{gap:.55rem}
-  .badge{margin-top:.2rem}
+  .logo{font-size:clamp(1.8rem,8.5vw,2.7rem)}
+  .badge{margin-top:.2rem;width:clamp(22px,5vw,30px);height:clamp(22px,5vw,30px)}
   .blob-tl{width:220px;top:-70px;left:-90px;opacity:.7}
   .blob-br{width:260px}
   .services-list{font-size:clamp(.9rem,4.2vw,1.15rem);gap:.25rem}
@@ -206,11 +207,10 @@ footer .nav-links a{color:var(--gray)}
 }
 @media (max-width:400px){
   .container{padding:0 .9rem}
-  .hero-grid{padding:0 .9rem}
-  .logo{font-size:clamp(1.9rem,11vw,2.6rem)}
-  .services-list{font-size:clamp(.82rem,4.5vw,1rem)}
-  .tagline{font-size:.92rem}
-  .hero-cta{flex-direction:column;width:100%}
+  .hero-grid{padding:0 .9rem;gap:.7rem}
+  .logo{font-size:clamp(1.55rem,8vw,2.2rem)}
+  .services-list{font-size:clamp(.78rem,4.2vw,.95rem)}
+  .tagline{font-size:.88rem}
   .hero-cta .btn{width:100%;justify-content:center}
   .stats{grid-template-columns:1fr}
 }
@@ -646,7 +646,7 @@ document.getElementById('contactForm').addEventListener('submit', e => {
   var flame = new Pool(mobile?700:1000, 0.13, 1.0);
   var plume = new Pool(mobile?800:1300, 0.26, 0.85);
   var FLAME_LO=[0.35,0.06,0.0], FLAME_MID=[1.0,0.55,0.16], FLAME_HI=[1.0,0.97,0.80];
-  var PLUME_LO=[0.02,0.03,0.05], PLUME_MID=[0.34,0.42,0.56], PLUME_HI=[0.86,0.92,1.0];
+  var PLUME_LO=[0.22,0.24,0.28], PLUME_MID=[0.62,0.66,0.74], PLUME_HI=[0.97,0.98,1.0];
 
   // ---------- sky: two star layers + soft nebula ----------
   function starLayer(count, size, opacity, zmin, zmax, hex){
@@ -685,95 +685,69 @@ document.getElementById('contactForm').addEventListener('submit', e => {
   window.addEventListener('resize', resize);
   if(window.ResizeObserver){ new ResizeObserver(resize).observe(stage); }
 
-  // ---------- launch sequence ----------
+  // ---------- launch loop: fly UP with fire + white smoke trail ----------
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
   var state='idle', stateT=0, vy=0, first=true;
-  var rocketAlpha=0, starSpeed=0.06, shakeT=0, flashT=0;
-  var thrustVis=0.15;
+  var rocketAlpha=0, starSpeed=0.05, thrustVis=0.2;
   var clock = new THREE.Clock();
 
   function update(dt, t){
     stateT += dt;
-    var wx = rocket.position.x, wy = rocket.position.y - 0.12, wz = rocket.position.z;
-    var thrustTarget = 0.15;
+    var wx = rocket.position.x, wy = rocket.position.y - 0.16, wz = rocket.position.z;
 
     if(state==='idle'){
-      var dur = first ? 2.0 : 1.7;
+      var dur = first ? 1.5 : 1.0;
       rocket.position.x = 0; rocket.position.z = 0;
-      var yy = baseY + 0.07*Math.sin(t*2.0);
+      var yy = baseY + 0.07*Math.sin(t*1.9);
       var rem = dur - stateT;
-      if(rem < 0.28){ var cc = 1 - Math.max(0,rem)/0.28; yy -= 0.16*cc*cc; }   // crouch
+      if(rem < 0.3){ var cc = 1 - Math.max(0,rem)/0.3; yy -= 0.14*cc*cc; }   // little crouch
       rocket.position.y = yy;
       rocketAlpha += (1 - rocketAlpha) * Math.min(1, dt*5);
-      rocketPoints.rotation.y += 0.35*dt;
-      starSpeed += (0.06 - starSpeed)*Math.min(1, dt*2);
-
-      if(rem < 0.6){
-        var ch = 1 - Math.max(0,rem)/0.6;
-        thrustTarget = 0.2 + 0.6*ch;
-        flame.emit(Math.floor(3 + ch*16), wx, wy, wz, 1.2+ch*3.2, 2.0+ch*4.0, 0.10+ch*0.08, 0.30, 0.55, 0);
-      } else {
-        thrustTarget = 0.15;
-        flame.emit(3, wx, wy, wz, 1.0, 1.8, 0.08, 0.28, 0.48, 0);
-      }
-      if(stateT >= dur){ state='launch'; stateT=0; vy=2.0; shakeT=reduce?0:0.34; flashT=0.34;
-        flame.burst(reduce?0:60, wx, wy, wz, 5.0, 0.25, 0.5); }
+      rocketPoints.rotation.y += 0.30*dt;
+      thrustVis += (0.45 - thrustVis) * Math.min(1, dt*4);
+      // gentle pre-launch flame + a wisp of white smoke
+      flame.emit(reduce?2:4, wx, wy, wz, 1.0, 2.0, 0.08, 0.20, 0.40, 0);
+      plume.emit(1, wx, wy-0.04, wz, 0.2, 0.5, 0.13, 1.2, 2.0, 0.5);
+      starSpeed += (0.05 - starSpeed) * Math.min(1, dt*2);
+      if(stateT >= dur){ state='launch'; stateT=0; vy=2.2; }
 
     } else if(state==='launch'){
-      thrustTarget = 1.0;
-      var accel = reduce ? 3.2 : 6.6;
+      thrustVis += (1 - thrustVis) * Math.min(1, dt*7);
+      var accel = reduce ? 3.6 : 7.2;
       vy += accel * dt;
-      rocket.position.y += vy * dt;
-      rocketPoints.rotation.y += 0.7*dt;
-      rocket.position.x = 0.045*Math.sin(t*26) * Math.max(0, 1 - rocket.position.y*0.2);
-
+      rocket.position.y += vy * dt;                       // shoot up (vup)
+      rocketPoints.rotation.y += 0.6*dt;
+      rocket.position.x = 0.04*Math.sin(t*24) * Math.max(0, 1 - rocket.position.y*0.2);
+      // strong fire + white smoke trailing from behind
+      flame.emit(reduce?12:26, wx, wy, wz, reduce?3.5:6.0, reduce?5:9, 0.14, 0.28, 0.52, 0);
+      plume.emit(reduce?8:16, wx, wy-0.05, wz, 1.3, 3.0, 0.22, 1.3, 2.6, 0.9);
+      starSpeed += ((reduce?2.0:5.5) - starSpeed) * Math.min(1, dt*2.5);
       if(rocket.position.y > -0.2){
-        var over = rocket.position.y + 0.2;
-        rocket.position.z -= Math.min(7, over*0.95) * dt * 2.2;
-        rocketAlpha += (0 - rocketAlpha) * Math.min(1, dt*1.7);
+        rocketAlpha += (0 - rocketAlpha) * Math.min(1, dt*1.7);   // fade as it leaves
       }
-      flame.emit(reduce?10:24, wx, wy, wz, reduce?3.5:6.0, reduce?5:9, 0.14, 0.30, 0.55, 0);
-      plume.emit(reduce?8:18, wx, wy-0.05, wz, 1.6, 3.2, 0.22, 0.7, 1.25, 1.6);
-      starSpeed += ((reduce?2.0:6.5) - starSpeed) * Math.min(1, dt*2.5);
-
-      if(rocket.position.y > 7 || rocketAlpha < 0.02){ state='reset'; stateT=0; }
+      if(rocket.position.y > 6.5 || rocketAlpha < 0.03){ state='reset'; stateT=0; }
 
     } else if(state==='reset'){
-      thrustTarget = 0.0;
+      thrustVis += (0.0 - thrustVis) * Math.min(1, dt*3);
       rocket.position.set(0, baseY, 0); vy=0; rocketAlpha=0;
-      starSpeed += (0.06 - starSpeed)*Math.min(1, dt*3);
-      if(stateT > 0.35){ state='idle'; stateT=0; first=false; }
+      starSpeed += (0.05 - starSpeed) * Math.min(1, dt*3);
+      if(stateT > 0.4){ state='idle'; stateT=0; first=false; }
     }
 
     rmat.opacity = rocketAlpha;
 
     // engine flare + window glow + body bloom
-    thrustVis += (thrustTarget - thrustVis) * Math.min(1, dt*8);
-    var flick = 0.88 + Math.random()*0.24;
+    var flick = 0.88 + Math.random()*0.22;
     var es = (0.45 + 1.7*thrustVis) * flick;
     engineFlare.scale.set(es, es*1.15, 1);
     engineFlare.material.opacity = (0.2 + 0.8*thrustVis) * rocketAlpha;
     winGlow.material.opacity = (0.5 + 0.4*Math.sin(t*3.0)) * rocketAlpha * 0.9;
     bodyBloom.material.opacity = 0.10 * rocketAlpha;
+    flash.material.opacity = 0;
 
-    // ignition flash
-    if(flashT > 0){
-      flashT -= dt;
-      var p = Math.max(0, flashT/0.34);
-      var fs = 0.5 + (1-p)*3.4;
-      flash.scale.set(fs, fs, 1);
-      flash.material.opacity = p * 1.0 * rocketAlpha;
-    } else { flash.material.opacity = 0; }
-
-    // camera kick
-    if(shakeT > 0){
-      shakeT -= dt;
-      camera.position.x = (Math.random()-0.5)*0.055;
-      camera.position.y = camBaseY + (Math.random()-0.5)*0.055;
-    } else {
-      camera.position.x *= 0.85;
-      camera.position.y += (camBaseY - camera.position.y)*0.2;
-    }
+    // calm camera (no shake)
+    camera.position.x += (0 - camera.position.x)*0.1;
+    camera.position.y += (camBaseY - camera.position.y)*0.1;
     camera.lookAt(0, -0.6, 0);
 
     // particles
