@@ -1,4 +1,4 @@
-
+<!DOCTYPE html>
 <html lang="sq">
 <head>
 <meta charset="UTF-8"/>
@@ -215,12 +215,13 @@ footer .nav-links a{color:var(--gray)}
   .stats{grid-template-columns:1fr}
 }
 
-/* ══════════════ ROCKET STAGE (replaces lizard) ══════════════ */
-.rocket-stage{width:100%;height:clamp(440px,56vh,600px);position:relative}
-.rocket-stage canvas{width:100%!important;height:100%!important;display:block}
-@media (max-width:980px){.rocket-stage{height:clamp(340px,46vh,460px);margin-top:.6rem}}
-@media (max-width:560px){.rocket-stage{height:clamp(260px,38vh,340px)}}
-@media (max-width:400px){.rocket-stage{height:clamp(230px,34vh,300px)}}
+/* ══════════════ HERO BACKGROUND CANVAS (stars fill whole page) ══════════════ */
+.hero{background:#000}
+.hero-canvas{position:absolute;inset:0;width:100%;height:100%;z-index:1;display:block;pointer-events:none}
+.hero-grid{position:relative;z-index:2}
+.hero-spacer{min-height:clamp(300px,44vh,520px)}
+@media (max-width:980px){.hero-spacer{min-height:clamp(260px,40vh,380px)}}
+@media (max-width:560px){.hero-spacer{min-height:clamp(220px,34vh,300px)}}
 </style>
 </head>
 <body>
@@ -245,12 +246,7 @@ footer .nav-links a{color:var(--gray)}
 
 <!-- ══════════════ HERO ══════════════ -->
 <section class="hero" id="top">
-  <svg class="blob blob-tl" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-    <path d="M0,0 L400,0 L400,95 C 345,135 318,82 268,138 C 218,196 236,262 158,272 C 80,282 64,202 22,212 C -12,220 0,105 0,0 Z"/>
-  </svg>
-  <svg class="blob blob-br" viewBox="0 0 400 300" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none">
-    <path d="M0,0 L400,0 L400,95 C 345,135 318,82 268,138 C 218,196 236,262 158,272 C 80,282 64,202 22,212 C -12,220 0,105 0,0 Z"/>
-  </svg>
+  <canvas id="rocketCanvas" class="hero-canvas"></canvas>
 
   <div class="hero-grid">
     <div class="hero-text">
@@ -276,9 +272,7 @@ footer .nav-links a{color:var(--gray)}
       </div>
     </div>
 
-    <div class="lizard-stage rocket-stage">
-      <canvas id="rocketCanvas"></canvas>
-    </div>
+    <div class="hero-spacer" aria-hidden="true"></div>
   </div>
 
   <div class="scroll-cue">Zbrit ↓</div>
@@ -476,12 +470,19 @@ document.getElementById('contactForm').addEventListener('submit', e => {
 
   // ---------- build the rocket from points ----------
   var P = [], C = [];
-  var white     = new THREE.Color('#eef4ff');
-  var lightBlue = new THREE.Color('#a9caff');
-  var blue      = new THREE.Color('#3B82F6');
-  var deepBlue  = new THREE.Color('#1f5fd6');
-  var win       = new THREE.Color('#9af2ff');
-  var nozzleCol = new THREE.Color('#7e8ba2');
+  // warm "stardust" palette (matches the reference video)
+  var paleGold  = new THREE.Color('#ffe9b0');
+  var gold      = new THREE.Color('#ffb43a');
+  var amber     = new THREE.Color('#ff7a1a');
+  var amberDeep = new THREE.Color('#c2400a');
+  var win       = new THREE.Color('#48e6ff');   // bright cyan porthole
+  var winRing   = new THREE.Color('#1b9dff');
+  var nozzleCol = new THREE.Color('#9a5a2a');
+  // legacy aliases so the rest of the build keeps working, now warm-toned
+  var white     = paleGold;
+  var lightBlue = gold;
+  var blue      = amber;
+  var deepBlue  = amberDeep;
   function push(x,y,z,col){ P.push(x,y,z); C.push(col.r,col.g,col.b); }
   function mix(a,b,t){ return a.clone().lerp(b,t); }
 
@@ -539,14 +540,14 @@ document.getElementById('contactForm').addEventListener('submit', e => {
   }
   fin(0); fin(Math.PI/2); fin(Math.PI); fin(Math.PI*1.5);
 
-  // porthole window (bright core + ring)
-  for(i=0;i<90;i++){
+  // porthole window (bright cyan core + blue ring)
+  for(i=0;i<140;i++){
     var ang = Math.random()*Math.PI*2, rad = Math.sqrt(Math.random())*0.12;
     push(Math.cos(ang)*rad, 1.30 + Math.sin(ang)*rad, R + 0.03, win);
   }
-  for(i=0;i<170;i++){
+  for(i=0;i<200;i++){
     var ang2 = Math.random()*Math.PI*2;
-    push(Math.cos(ang2)*0.16, 1.30 + Math.sin(ang2)*0.16, R + 0.025, mix(win, white, 0.4));
+    push(Math.cos(ang2)*0.16, 1.30 + Math.sin(ang2)*0.16, R + 0.025, winRing);
   }
 
   // flared nozzle
@@ -555,6 +556,19 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     t = Math.random(); a = Math.random()*Math.PI*2;
     r = R*0.66*(1 + t*0.6); y = -0.02 - 0.18*t;
     push(Math.cos(a)*r, y, Math.sin(a)*r, nozzleCol);
+  }
+
+  // loose stardust halo — sparse glowing motes drifting off the hull
+  var dustN = mobile ? 900 : 1500;
+  for(i=0;i<dustN;i++){
+    a = Math.random()*Math.PI*2;
+    y = -0.2 + Math.random()*(H+1.0);
+    // distance from surface, biased close but with a long sparse tail outward
+    var d = R*1.02 + Math.pow(Math.random(),2.2)*1.5;
+    var hcol = mix(gold, amber, Math.random());
+    if(Math.random()<0.22) hcol = mix(amber, amberDeep, Math.random());
+    if(Math.random()<0.12) hcol = paleGold;
+    push(Math.cos(a)*d, y + (Math.random()-0.5)*0.5, Math.sin(a)*d, hcol);
   }
 
   var rgeo = new THREE.BufferGeometry();
@@ -570,14 +584,17 @@ document.getElementById('contactForm').addEventListener('submit', e => {
   rocket.add(rocketPoints);
 
   // engine flare + ignition flash + soft body bloom (move with the rocket)
-  var engineFlare = glowSprite('#ffb866', 0.0); engineFlare.position.set(0,-0.16,0); rocket.add(engineFlare);
+  var engineFlare = glowSprite('#ff9540', 0.0); engineFlare.position.set(0,-0.16,0); rocket.add(engineFlare);
   var flash = glowSprite('#ffffff', 0.0); flash.position.set(0,-0.16,0); rocket.add(flash);
-  var bodyBloom = glowSprite('#5aa0ff', 0.0); bodyBloom.position.set(0,0.95,0); bodyBloom.scale.set(2.4,3.4,1); rocket.add(bodyBloom);
-  var winGlow = glowSprite('#9af2ff', 0.0); winGlow.position.set(0,1.30,R+0.05); winGlow.scale.set(0.7,0.7,1); rocketPoints.add(winGlow);
+  var bodyBloom = glowSprite('#ff9a3c', 0.0); bodyBloom.position.set(0,0.95,0); bodyBloom.scale.set(2.4,3.4,1); rocket.add(bodyBloom);
+  var winGlow = glowSprite('#48e6ff', 0.0); winGlow.position.set(0,1.30,R+0.05); winGlow.scale.set(0.8,0.8,1); rocketPoints.add(winGlow);
 
   scene.add(rocket);
-  var baseY = -2.1;
-  rocket.position.set(0, baseY, 0);
+  // diagonal pose, pointing up-and-to-the-right like the reference
+  rocket.rotation.z = -0.52;
+  rocket.rotation.x = 0.15;
+  var baseY = -1.15;
+  rocket.position.set(3.0, baseY, 0);
 
   // ---------- particle pools (world space => leave a trail) ----------
   function Pool(count, size, opacity){
@@ -652,8 +669,8 @@ document.getElementById('contactForm').addEventListener('submit', e => {
   function starLayer(count, size, opacity, zmin, zmax, hex){
     var pos=new Float32Array(count*3);
     for(var i=0;i<count;i++){
-      pos[i*3]=(Math.random()-0.5)*26;
-      pos[i*3+1]=(Math.random()-0.5)*26;
+      pos[i*3]=(Math.random()-0.5)*36;
+      pos[i*3+1]=(Math.random()-0.5)*30;
       pos[i*3+2]=zmin-Math.random()*(zmax-zmin);
     }
     var geo=new THREE.BufferGeometry();
@@ -663,13 +680,13 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     var pts=new THREE.Points(geo,mat); scene.add(pts);
     return { pos:pos, geo:geo };
   }
-  var starsFar  = starLayer(mobile?350:500, 0.05, 0.55, 9, 22, '#8fb0ff');
-  var starsNear = starLayer(mobile?160:260, 0.085, 0.95, 3, 11, '#cfe0ff');
+  var starsFar  = starLayer(mobile?520:950, 0.05, 0.55, 9, 22, '#9fbcff');
+  var starsNear = starLayer(mobile?240:430, 0.085, 0.95, 3, 11, '#dfeaff');
 
-  var nebA = glowSprite('#16336e', 0.13); nebA.position.set(-3,2,-15); nebA.scale.set(20,20,1); scene.add(nebA);
-  var nebB = glowSprite('#3a1f5e', 0.10); nebB.position.set(4,-3,-17); nebB.scale.set(22,18,1); scene.add(nebB);
+  // (no nebula — keep the background pure black)
 
   // ---------- responsive framing ----------
+  var rocketX = 1.6;
   function resize(){
     var w = stage.clientWidth || canvas.clientWidth || 400;
     var h = stage.clientHeight || canvas.clientHeight || 400;
@@ -680,75 +697,58 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     var dW = 1.30/(camera.aspect*Math.tan(fr/2));
     camera.position.z = Math.max(dH, dW) * 1.45;
     camera.updateProjectionMatrix();
+    // how wide is the world at the rocket's depth -> park it on the right
+    var halfW = Math.tan(fr/2) * camera.position.z * camera.aspect;
+    rocketX = Math.max(0, Math.min(halfW * 0.52, halfW - 2.0));
   }
   resize();
   window.addEventListener('resize', resize);
   if(window.ResizeObserver){ new ResizeObserver(resize).observe(stage); }
 
-  // ---------- launch loop: fly UP with fire + white smoke trail ----------
+  // ---------- calm hover: slow spin, gentle bob, warm dust drift ----------
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var state='idle', stateT=0, vy=0, first=true;
   var rocketAlpha=0, starSpeed=0.05, thrustVis=0.2;
   var clock = new THREE.Clock();
+  var _engineWorld = new THREE.Vector3();
 
   function update(dt, t){
-    stateT += dt;
-    var wx = rocket.position.x, wy = rocket.position.y - 0.16, wz = rocket.position.z;
+    rocket.updateMatrixWorld();
 
-    if(state==='idle'){
-      var dur = first ? 1.5 : 1.0;
-      rocket.position.x = 0; rocket.position.z = 0;
-      var yy = baseY + 0.07*Math.sin(t*1.9);
-      var rem = dur - stateT;
-      if(rem < 0.3){ var cc = 1 - Math.max(0,rem)/0.3; yy -= 0.14*cc*cc; }   // little crouch
-      rocket.position.y = yy;
-      rocketAlpha += (1 - rocketAlpha) * Math.min(1, dt*5);
-      rocketPoints.rotation.y += 0.30*dt;
-      thrustVis += (0.45 - thrustVis) * Math.min(1, dt*4);
-      // gentle pre-launch flame + a wisp of white smoke
-      flame.emit(reduce?2:3, wx, wy, wz, 0.9, 1.7, 0.06, 0.18, 0.34, 0);
-      plume.emit(1, wx, wy-0.04, wz, 0.18, 0.42, 0.10, 1.0, 1.7, 0.45);
-      starSpeed += (0.05 - starSpeed) * Math.min(1, dt*2);
-      if(stateT >= dur){ state='launch'; stateT=0; vy=2.2; }
-
-    } else if(state==='launch'){
-      thrustVis += (1 - thrustVis) * Math.min(1, dt*7);
-      var accel = reduce ? 3.6 : 7.2;
-      vy += accel * dt;
-      rocket.position.y += vy * dt;                       // shoot up (vup)
-      rocketPoints.rotation.y += 0.6*dt;
-      rocket.position.x = 0.04*Math.sin(t*24) * Math.max(0, 1 - rocket.position.y*0.2);
-      // strong fire + white smoke trailing from behind
-      flame.emit(reduce?6:11, wx, wy, wz, reduce?2.4:3.8, reduce?3.4:5.2, 0.07, 0.22, 0.40, 0);
-      plume.emit(reduce?4:8, wx, wy-0.05, wz, 0.8, 1.8, 0.12, 1.1, 2.1, 0.6);
-      starSpeed += ((reduce?2.0:5.5) - starSpeed) * Math.min(1, dt*2.5);
-      if(rocket.position.y > -0.2){
-        rocketAlpha += (0 - rocketAlpha) * Math.min(1, dt*1.7);   // fade as it leaves
-      }
-      if(rocket.position.y > 6.5 || rocketAlpha < 0.03){ state='reset'; stateT=0; }
-
-    } else if(state==='reset'){
-      thrustVis += (0.0 - thrustVis) * Math.min(1, dt*3);
-      rocket.position.set(0, baseY, 0); vy=0; rocketAlpha=0;
-      starSpeed += (0.05 - starSpeed) * Math.min(1, dt*3);
-      if(stateT > 0.4){ state='idle'; stateT=0; first=false; }
-    }
-
+    // fade the rocket in once, then keep it present
+    rocketAlpha += (1 - rocketAlpha) * Math.min(1, dt*3);
     rmat.opacity = rocketAlpha;
 
-    // engine flare + window glow + body bloom
-    var flick = 0.88 + Math.random()*0.22;
-    var es = (0.35 + 1.0*thrustVis) * flick;
+    // gentle floating bob (keeps the diagonal tilt) + park on the right side
+    rocket.position.x += (rocketX - rocket.position.x) * Math.min(1, dt*4);
+    rocket.position.y = baseY + 0.10*Math.sin(t*1.2);
+    // slow shimmer: particles rotate around the body's long axis
+    rocketPoints.rotation.y += (reduce ? 0.10 : 0.22) * dt;
+
+    // soft, steady thruster level
+    thrustVis += (0.55 - thrustVis) * Math.min(1, dt*3);
+
+    // world position of the nozzle (respects the tilt)
+    _engineWorld.set(0, -0.18, 0).applyMatrix4(rocket.matrixWorld);
+    var wx = _engineWorld.x, wy = _engineWorld.y, wz = _engineWorld.z;
+
+    // warm stardust drifting off the engine + a faint haze
+    flame.emit(reduce?2:4, wx, wy, wz, 0.5, 1.2, 0.18, 0.5, 1.1, 0.25);
+    plume.emit(reduce?1:2, wx, wy-0.03, wz, 0.25, 0.6, 0.22, 0.9, 1.6, 0.4);
+    starSpeed += (0.06 - starSpeed) * Math.min(1, dt*2);
+
+    // engine flare + window glow + body bloom (always lit now)
+    var flick = 0.9 + Math.random()*0.18;
+    var es = (0.3 + 0.9*thrustVis) * flick;
     engineFlare.scale.set(es, es*1.15, 1);
-    engineFlare.material.opacity = (0.2 + 0.8*thrustVis) * rocketAlpha;
-    winGlow.material.opacity = (0.5 + 0.4*Math.sin(t*3.0)) * rocketAlpha * 0.9;
-    bodyBloom.material.opacity = 0.10 * rocketAlpha;
+    engineFlare.material.opacity = (0.25 + 0.55*thrustVis) * rocketAlpha;
+    winGlow.material.opacity = (0.55 + 0.4*Math.sin(t*2.6)) * rocketAlpha;
+    bodyBloom.material.opacity = 0.12 * rocketAlpha;
     flash.material.opacity = 0;
 
     // calm camera (no shake)
     camera.position.x += (0 - camera.position.x)*0.1;
     camera.position.y += (camBaseY - camera.position.y)*0.1;
-    camera.lookAt(0, -0.6, 0);
+    camera.lookAt(0, 0, 0);
 
     // particles
     flame.update(dt, FLAME_LO, FLAME_MID, FLAME_HI);
@@ -758,11 +758,11 @@ document.getElementById('contactForm').addEventListener('submit', e => {
     var sp1 = starSpeed, sp2 = starSpeed*1.7;
     for(var i=0;i<starsFar.pos.length;i+=3){
       starsFar.pos[i+1] -= sp1*dt;
-      if(starsFar.pos[i+1] < -13){ starsFar.pos[i+1] += 26; starsFar.pos[i] = (Math.random()-0.5)*26; }
+      if(starsFar.pos[i+1] < -15){ starsFar.pos[i+1] += 30; starsFar.pos[i] = (Math.random()-0.5)*36; }
     }
     for(var j=0;j<starsNear.pos.length;j+=3){
       starsNear.pos[j+1] -= sp2*dt;
-      if(starsNear.pos[j+1] < -13){ starsNear.pos[j+1] += 26; starsNear.pos[j] = (Math.random()-0.5)*26; }
+      if(starsNear.pos[j+1] < -15){ starsNear.pos[j+1] += 30; starsNear.pos[j] = (Math.random()-0.5)*36; }
     }
     starsFar.geo.attributes.position.needsUpdate = true;
     starsNear.geo.attributes.position.needsUpdate = true;
